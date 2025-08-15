@@ -1,32 +1,30 @@
-import { useState } from "react";
+<script>
+async function publish() {
+  const title = document.getElementById('title').value.trim();
+  const content = document.getElementById('content').value.trim();
 
-export default function Home() {
-  const [topic, setTopic] = useState("");
-  const [result, setResult] = useState("");
-
-  async function handleGenerate() {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic }),
-    });
-    const data = await res.json();
-    setResult(data.text);
+  if (!title || !content) {
+    alert('Title and content required');
+    return;
   }
 
-  return (
-    <div style={{ padding: 40, fontFamily: 'sans-serif' }}>
-      <h1>✍️ MyDraftly AI Blog Generator</h1>
-      <input
-        style={{ padding: 10, width: "60%" }}
-        placeholder="Enter a blog topic..."
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-      />
-      <button style={{ marginLeft: 10, padding: 10 }} onClick={handleGenerate}>
-        Generate
-      </button>
-      <div style={{ marginTop: 20, whiteSpace: "pre-wrap" }}>{result}</div>
-    </div>
-  );
+  try {
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert('Failed: ' + (data.error || 'Unknown error'));
+      return;
+    }
+
+    alert('✅ Post published!');
+    window.location.href = '/blog.html';
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
 }
+</script>
