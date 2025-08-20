@@ -1,0 +1,11 @@
+
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial;color:#111;background:#fafafa}
+a{color:#0b6bff;text-decoration:none}a:hover{text-decoration:underline}
+nav{display:flex;gap:12px;padding:12px;border-bottom:1px solid #eee;background:#fff;position:sticky;top:0}
+.container{max-width:900px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px;margin:12px 0}
+.muted{color:#666}
+.btn{display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.btn:hover{background:#f1f5ff}
+input,textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px}
+label{display:block;margin:8px 0 4px}
