@@ -1,4 +1,12 @@
 {
+  "scripts": {
+    "prebuild": "grep -R \"export const config\" -n app || true",
+    "build": "next build",
+    "start": "next start"
+  }
+}
+
+{
   "name": "blog-ai",
   "version": "1.0.0",
   "private": true,
