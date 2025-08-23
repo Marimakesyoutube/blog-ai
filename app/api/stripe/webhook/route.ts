@@ -1,32 +1,25 @@
-// app/api/stripe/webhook/route.ts
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// App Router runtime flags (replace old `export const config`)
-export const runtime = "nodejs";           // needed to read raw body (not Edge)
-export const dynamic = "force-dynamic";    // webhooks are dynamic
-export const preferredRegion = "auto";     // optional
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const preferredRegion = "auto";
 
 export async function POST(req: Request) {
-  // 1) Get the raw body & signature
-  const body = await req.text();
-  const sig = req.headers.get("stripe-signature") || "";
+  const rawBody = await req.text();
+  const signature = req.headers.get("stripe-signature") || "";
 
-  // 2) Init Stripe
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-10-16",
-  });
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" });
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (err: any) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  // 3) Init Supabase (service actions)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -38,16 +31,12 @@ export async function POST(req: Request) {
         const s = event.data.object as Stripe.Checkout.Session;
         const email = s.customer_details?.email || (s.customer_email as string) || "";
         const stripeCustomerId = (s.customer as string) || "";
-        const subId = (s.subscription as string) || "";
-        const priceId = (s as any)?.line_items?.data?.[0]?.price?.id as string | undefined;
 
         if (email && stripeCustomerId) {
           await supabase
             .from("customers")
             .upsert({ email, stripe_customer_id: stripeCustomerId }, { onConflict: "email" });
         }
-
-        // subscription details finalized on subscription.* events
         break;
       }
 
@@ -59,7 +48,6 @@ export async function POST(req: Request) {
         const status = sub.status;
         const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
 
-        // get email (sometimes not on the object)
         let email = (sub as any).customer_email as string | undefined;
         if (!email) {
           const cust = await stripe.customers.retrieve(stripeCustomerId);
@@ -83,7 +71,6 @@ export async function POST(req: Request) {
           },
           { onConflict: "stripe_subscription_id" }
         );
-
         break;
       }
 
@@ -97,11 +84,10 @@ export async function POST(req: Request) {
       }
 
       default:
-        // ignore others for now
         break;
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ received: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
